@@ -1,0 +1,46 @@
+name: reusable-cfn-validate
+
+on:
+  workflow_call:
+    inputs:
+      cfn_glob:
+        required: false
+        type: string
+        default: "**/*.y*ml"
+      guard_policies_dir:
+        required: false
+        type: string
+        default: "policies"
+    secrets: {}
+
+jobs:
+  cfn-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install cfn-lint
+        run: |
+          pip install cfn-lint
+
+      - name: Run cfn-lint
+        run: |
+          cfn-lint ${{ inputs.cfn_glob }}
+
+      - name: Install cfn-guard
+        run: |
+          curl -L https://github.com/aws-cloudformation/cloudformation-guard/releases/latest/download/cfn-guard-linux.tar.gz -o /tmp/cfn-guard.tgz
+          tar -xzf /tmp/cfn-guard.tgz -C /usr/local/bin
+
+      - name: Run cfn-guard (if policies exist)
+        run: |
+          if [ -d "${{ inputs.guard_policies_dir }}" ]; then
+            cfn-guard validate -r "${{ inputs.guard_policies_dir }}" -d .
+          else
+            echo "No guard policies dir '${{ inputs.guard_policies_dir }}' found. Skipping."
+          fi
