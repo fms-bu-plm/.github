@@ -1,5 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: Support interne
-    url: https://intranet.example/support
-    about: Pour les demandes hors bug/feature
